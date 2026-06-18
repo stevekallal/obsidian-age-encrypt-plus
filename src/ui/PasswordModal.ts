@@ -6,6 +6,13 @@ export interface PasswordPromptResult {
     remember?: boolean;
 }
 
+export interface PasswordPromptDefaults {
+    password?: string;
+    confirmPassword?: string;
+    hint?: string;
+    remember?: boolean;
+}
+
 export class PasswordModal extends Modal {
     private password: string = '';
     private confirmPassword: string = '';
@@ -18,10 +25,15 @@ export class PasswordModal extends Modal {
     constructor(
         app: App,
         isEncrypting: boolean = false,
-        existingHint?: string
+        existingHint?: string,
+        defaults?: PasswordPromptDefaults
     ) {
         super(app);
         this.isEncrypting = isEncrypting;
+        this.password = defaults?.password || '';
+        this.confirmPassword = defaults?.confirmPassword || '';
+        this.hint = defaults?.hint || existingHint || '';
+        this.remember = defaults?.remember ?? true;
     }
 
     async openAndGetPassword(): Promise<PasswordPromptResult | null> {

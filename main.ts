@@ -13,11 +13,12 @@ type HTMLElementType = HTMLElement;
 import { EncryptionService } from './src/services/encryption';
 import { AgeEncryptSettings, DEFAULT_SETTINGS } from './src/settings';
 import { AgeEncryptSettingTab } from './src/ui/SettingsTab';
-import { PasswordModal } from './src/ui/PasswordModal';
+import { PasswordModal, PasswordPromptDefaults, PasswordPromptResult } from './src/ui/PasswordModal';
 
 export default class AgeEncryptPlugin extends Plugin {
 	settings: AgeEncryptSettings;
 	private encryptionService: EncryptionService;
+	private encryptSessionDefaults: PasswordPromptDefaults | null = null;
 
 	async onload(): Promise<void> {
 		await this.loadSettings();
@@ -174,7 +175,7 @@ export default class AgeEncryptPlugin extends Plugin {
 					return;
 				}
 
-				const modal = new PasswordModal(this.app, true);
+				const modal = new PasswordModal(this.app, true, undefined, this.encryptSessionDefaults ?? undefined);
 				const result = await modal.openAndGetPassword();
 
 				if (!result) return;
@@ -198,6 +199,7 @@ export default class AgeEncryptPlugin extends Plugin {
 					}
 
 					editor.replaceSelection(formattedBlock);
+					this.updateEncryptSessionDefaults(result);
 				} catch (error) {
 					new Notice('Failed to encrypt content');
 				}
@@ -216,7 +218,7 @@ export default class AgeEncryptPlugin extends Plugin {
 				}
 
 				const fileContent = await this.app.vault.read(activeFile);
-				const modal = new PasswordModal(this.app, true);
+				const modal = new PasswordModal(this.app, true, undefined, this.encryptSessionDefaults ?? undefined);
 				const result = await modal.openAndGetPassword();
 
 				if (!result) return;
@@ -253,6 +255,7 @@ export default class AgeEncryptPlugin extends Plugin {
 					}
 
 					await this.app.vault.modify(activeFile, finalContent);
+					this.updateEncryptSessionDefaults(result);
 					new Notice('File encrypted successfully');
 				} catch (error) {
 					new Notice('Failed to encrypt file');
@@ -271,6 +274,21 @@ export default class AgeEncryptPlugin extends Plugin {
 
 	onunload(): void {
 		this.encryptionService.clearStoredPasswords();
+		this.encryptSessionDefaults = null;
+	}
+
+	private updateEncryptSessionDefaults(result: PasswordPromptResult): void {
+		if (!result.remember) {
+			this.encryptSessionDefaults = null;
+			return;
+		}
+
+		this.encryptSessionDefaults = {
+			password: result.password,
+			confirmPassword: result.password,
+			hint: result.hint,
+			remember: true
+		};
 	}
 
 	// Helper method to update file content
