@@ -1,10 +1,10 @@
 {
-	"id": "age-encrypt",
-	"name": "Age Encrypt",
-	"version": "1.2.1",
+	"id": "age-encrypt-plus",
+	"name": "Age Encrypt Plus",
+	"version": "1.2.2",
 	"minAppVersion": "1.4.0",
 	"description": "Secure content encryption using age encryption library",
-	"author": "Metin Ur",
+	"author": "Steve Kallal",
 	"authorUrl": "https://github.com/mr-1311",
 	"isDesktopOnly": false
 }

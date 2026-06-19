@@ -74,20 +74,43 @@ export default class AgeEncryptPlugin extends Plugin {
 				decryptButton.onclick = async () => {
 					let password: string | undefined;
 					let rememberPassword = false;
+					let decrypted: string | undefined;
 
-					if (this.encryptionService.hasStoredPassword(content)) {
-						password = this.encryptionService.getStoredPassword(content);
-						rememberPassword = true;
-					} else {
+					const storedPassword = this.encryptionService.getStoredPassword(content)
+						?? this.encryptionService.getSessionPassword();
+
+					if (storedPassword) {
+						try {
+							decrypted = await this.encryptionService.decrypt(content, storedPassword);
+							password = storedPassword;
+							rememberPassword = true;
+							this.encryptionService.rememberPassword(content, storedPassword);
+						} catch (error) {
+							password = undefined;
+							rememberPassword = false;
+						}
+					}
+
+					if (!decrypted) {
 						const result = await new PasswordModal(this.app, false, hint)
 							.openAndGetPassword();
 						if (!result) return;
 						password = result.password;
 						rememberPassword = result.remember || false;
+
+						try {
+							decrypted = await this.encryptionService.decrypt(content, password);
+						} catch (error) {
+							new Notice('Failed to decrypt content');
+							return;
+						}
+
+						if (rememberPassword) {
+							this.encryptionService.rememberPassword(content, password);
+						}
 					}
 
-					try {
-						const decrypted = await this.encryptionService.decrypt(content, password!);
+					if (decrypted) {
 						el.empty();
 
 						// Calculate number of lines in decrypted text
@@ -154,8 +177,6 @@ export default class AgeEncryptPlugin extends Plugin {
 								new Notice('Failed to save as plain text');
 							}
 						};
-					} catch (error) {
-						new Notice('Failed to decrypt content');
 					}
 				};
 			} catch (error) {

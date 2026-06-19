@@ -13,6 +13,7 @@ export interface EncryptedBlock {
 
 export class EncryptionService {
     private sessionPasswords: Map<string, string> = new Map();
+    private sessionPassword?: string;
 
     private arrayBufferToBase64(buffer: Uint8Array): string {
         const base64 = btoa(String.fromCharCode(...buffer));
@@ -38,7 +39,7 @@ export class EncryptionService {
             const encryptedBase64 = this.arrayBufferToBase64(encryptedArray);
 
             if (options.remember) {
-                this.sessionPasswords.set(encryptedBase64, options.password);
+                this.rememberPassword(encryptedBase64, options.password);
             }
             return encryptedBase64;
         } catch (error: unknown) {
@@ -117,7 +118,21 @@ export class EncryptionService {
         return this.sessionPasswords.get(encryptedContent);
     }
 
+    getSessionPassword(): string | undefined {
+        return this.sessionPassword;
+    }
+
+    setSessionPassword(password: string): void {
+        this.sessionPassword = password;
+    }
+
+    rememberPassword(encryptedContent: string, password: string): void {
+        this.sessionPasswords.set(encryptedContent, password);
+        this.setSessionPassword(password);
+    }
+
     clearStoredPasswords(): void {
         this.sessionPasswords.clear();
+        this.sessionPassword = undefined;
     }
 }
