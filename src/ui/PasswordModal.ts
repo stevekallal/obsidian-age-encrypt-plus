@@ -95,42 +95,26 @@ export class PasswordModal extends Modal {
             this.close();
         };
 
-        new Setting(contentEl)
-            .setName('Password')
-            .setDesc('Enter your password')
-            .addText(text => {
-                text
-                    .setPlaceholder('Enter password')
-                    .setValue(this.password)
-                    .onChange(value => this.password = value);
-                text.inputEl.type = 'password';
-                text.inputEl.addEventListener('keydown', (e) => {
-                    if (e.key === 'Enter') {
-                        e.preventDefault();
-                        submitHandler();
-                    }
-                });
-                return text;
-            });
+        this.addPasswordField(
+            contentEl,
+            'Password',
+            'Enter your password',
+            'Enter password',
+            this.password,
+            value => this.password = value,
+            submitHandler
+        );
 
         if (this.isEncrypting) {
-            new Setting(contentEl)
-                .setName('Confirm Password')
-                .setDesc('Re-enter your password to confirm')
-                .addText(text => {
-                    text
-                        .setPlaceholder('Confirm password')
-                        .setValue(this.confirmPassword)
-                        .onChange(value => this.confirmPassword = value);
-                    text.inputEl.type = 'password';
-                    text.inputEl.addEventListener('keydown', (e) => {
-                        if (e.key === 'Enter') {
-                            e.preventDefault();
-                            submitHandler();
-                        }
-                    });
-                    return text;
-                });
+            this.addPasswordField(
+                contentEl,
+                'Confirm Password',
+                'Re-enter your password to confirm',
+                'Confirm password',
+                this.confirmPassword,
+                value => this.confirmPassword = value,
+                submitHandler
+            );
 
             new Setting(contentEl)
                 .setName('Hint (optional)')
@@ -166,5 +150,52 @@ export class PasswordModal extends Modal {
     onClose() {
         const { contentEl } = this;
         contentEl.empty();
+    }
+
+    private addPasswordField(
+        contentEl: HTMLElement,
+        name: string,
+        description: string,
+        placeholder: string,
+        value: string,
+        onChange: (value: string) => void,
+        submitHandler: () => void
+    ): void {
+        let passwordInput: HTMLInputElement;
+
+        const setting = new Setting(contentEl)
+            .setName(name)
+            .setDesc(description)
+            .addText(text => {
+                text
+                    .setPlaceholder(placeholder)
+                    .setValue(value)
+                    .onChange(onChange);
+                text.inputEl.type = 'password';
+                text.inputEl.classList.add('age-encrypt-password-input');
+                text.inputEl.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        submitHandler();
+                    }
+                });
+                passwordInput = text.inputEl;
+                return text;
+            })
+            .addExtraButton(button => {
+                let passwordVisible = false;
+
+                button
+                    .setIcon('eye')
+                    .setTooltip('Show password')
+                    .onClick(() => {
+                        passwordVisible = !passwordVisible;
+                        passwordInput.type = passwordVisible ? 'text' : 'password';
+                        button.setIcon(passwordVisible ? 'eye-off' : 'eye');
+                        button.setTooltip(passwordVisible ? 'Hide password' : 'Show password');
+                    });
+            });
+
+        setting.settingEl.classList.add('age-encrypt-password-setting');
     }
 }

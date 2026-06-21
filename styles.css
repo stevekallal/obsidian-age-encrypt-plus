@@ -134,3 +134,11 @@ If your plugin does not need CSS, delete this file.
 .age-encrypt-button-secondary:hover {
     background-color: var(--background-modifier-border-hover);
 }
+
+.age-encrypt-password-setting .setting-item-control {
+    gap: 6px;
+}
+
+.age-encrypt-password-input {
+    min-width: 0;
+}
